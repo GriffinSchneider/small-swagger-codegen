@@ -1,21 +1,18 @@
 import fs from 'fs';
+import path from 'path';
+import mkdirp from 'mkdirp';
 import _ from 'lodash';
 import handlebars from 'handlebars';
 import { verify } from './verify';
 import templateDatasFromSpecs from './templateDatasFromSpecs';
-import setupHandlebars from './handlebarHelpers';
-import swift from './swift';
-import kotlin from './kotlin';
-import js from './js';
 
-const languages = { swift, kotlin, js };
-
-export default function render(languageName, apis, options) {
-  const language = languages[languageName];
+// Parse the api specs, render our templates, and write the output files.
+// Also functions as the programmatic interface for small-swagger-codegen.
+export function render(language, apis, options, output) {
   const templateDatas = templateDatasFromSpecs(apis, language, options);
   verify(templateDatas);
 
-  setupHandlebars(handlebars);
+  language.configureHandlebars(handlebars);
 
   const templateSpecs = language.templates;
   const compiledTemplates = templateSpecs.map(({ source }) => {
@@ -27,11 +24,10 @@ export default function render(languageName, apis, options) {
 
   templateSpecs.forEach(({ partial }, index) => {
     if (partial) {
-      handlebars.registerPartial('modelClassTemplate', compiledTemplates[index]);
+      handlebars.registerPartial(partial, compiledTemplates[index]);
     }
   });
 
-  // Render everything and write output files.
   const outputs = _.map(templateDatas, (templateData, apiName) => {
     const specConfig = apis[apiName].spec;
     const apiVersion = options?.version || specConfig.info.version;
@@ -55,5 +51,15 @@ export default function render(languageName, apis, options) {
       })
       .filter(_.identity);
   });
-  return _.fromPairs(_.flatten(outputs));
+  const parts = _.fromPairs(_.flatten(outputs));
+
+  if (output) {
+    Object.entries(parts).forEach(([filename, content]) => {
+      const fullPath = path.join(output, filename);
+      mkdirp.sync(path.dirname(fullPath));
+      fs.writeFileSync(fullPath, content);
+    });
+  }
+
+  return parts;
 }

@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 
-import fs from 'fs';
-import path from 'path';
-import mkdirp from 'mkdirp';
 import minimist from 'minimist';
 import { readConfig } from './configReader';
-import render from './renderer';
+import { render } from './renderer';
 
 // Process command line args.
 const argv = minimist(process.argv.slice(2));
@@ -21,10 +18,4 @@ function safeConfigRead() {
 }
 
 const { language, apis, output, opts } = safeConfigRead();
-const parts = render(language, apis, opts);
-
-Object.entries(parts).forEach(([filename, content]) => {
-  const fullPath = path.join(output, filename);
-  mkdirp.sync(path.dirname(fullPath));
-  fs.writeFileSync(fullPath, content);
-});
+render(language, apis, opts, output);

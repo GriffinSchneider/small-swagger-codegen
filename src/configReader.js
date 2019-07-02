@@ -3,6 +3,12 @@ import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
 
+import swift from './swift';
+import kotlin from './kotlin';
+import js from './js';
+
+const languages = { swift, kotlin, js };
+
 function readFromPath(pathArg) {
   if (!pathArg) {
     return {};
@@ -16,7 +22,7 @@ function readFromPath(pathArg) {
       ...specConfig,
       spec: path.resolve(path.join(configDir, specConfig.spec)),
     })),
-    language: config.language,
+    languageName: config.language,
     output: config.output,
     opts: config.opts,
     configDir,
@@ -33,10 +39,12 @@ function resolveSpec(fullPath) {
 }
 
 export function readConfig(argv) {
-  const { language, apis, output, opts, configDir } = readFromPath(argv._?.[0]);
+  const { languageName, apis, output, opts, configDir } = readFromPath(argv._?.[0]);
 
-  if (!language && !argv.language) {
-    throw new Error('Missing language: Please add "language": "swift", "language": "js" or "language": "kotlin" to the top level of your config file.');
+  const language = languages[languageName || argv.language];
+  if (!language) {
+    const acceptableInputs = Object.keys(languages).map(l => `  "language": "${l}"`).join('\n');
+    throw new Error(`Missing or unknown language '${languageName}'. Please add one of the following to the top level of your config file:\n${acceptableInputs}`);
   }
 
   if (!apis && (!argv.spec || !argv.name)) {
@@ -55,7 +63,7 @@ export function readConfig(argv) {
   const resolvedOutput = configDir && output && path.resolve(configDir, output);
 
   const finalConfig = {
-    language: language || argv.language,
+    language,
     apis: _.mapValues(rawSpecs, api => ({
       ...api,
       // Load the specs from the file system

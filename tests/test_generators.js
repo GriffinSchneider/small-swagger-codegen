@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import tap from 'tap';
 import { readConfig } from '../src/configReader';
-import render from '../src/renderer';
+import { render } from '../src/renderer';
 
 function compareFiles(lang, test, items) {
   Object.entries(items).forEach(([fname, content]) => {

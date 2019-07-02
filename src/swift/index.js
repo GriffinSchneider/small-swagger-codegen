@@ -25,4 +25,21 @@ export default {
     string: { date: 'Date', 'date-time': 'Date', default: 'String' },
     array: typeName => `Array<${typeName}>`,
   },
+  configureHandlebars: (handlebars) => {
+    handlebars.registerHelper('maybeComment', function maybeComment(arg, options) {
+      if (!arg) {
+        return arg;
+      }
+      const data = options.data ? undefined : {
+        data: handlebars.createFrame(options.data),
+      };
+      const string = options.fn ? options.fn(this, data) : '';
+      if (!string || string.trim() === '') {
+        return undefined;
+      }
+      const trimmed = string.trim().replace(/\n/g, ' ');
+      const numSpaces = string.search(/\S/);
+      return `${' '.repeat(numSpaces)}/// ${trimmed}\n`;
+    });
+  },
 };

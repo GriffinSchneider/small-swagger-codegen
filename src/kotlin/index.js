@@ -20,4 +20,18 @@ export default {
     string: { date: 'OffsetDateTime', 'date-time': 'OffsetDateTime', default: 'String' },
     array: typeName => `List<${typeName}>`,
   },
+  configureHandlebars: (handlebars) => {
+    handlebars.registerHelper('oneline', function oneline(options) {
+      return options.fn(this).trim().replace(/\n/g, ' ').trim();
+    });
+    handlebars.registerHelper('isNotBodyParam', function isNotBodyParam(arg, options) {
+      if (!arg) {
+        return arg;
+      }
+      if (arg.inCap !== 'Body') {
+        return options.fn(this);
+      }
+      return options.inverse(this);
+    });
+  },
 };

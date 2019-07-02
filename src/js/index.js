@@ -31,4 +31,9 @@ export default {
     string: { date: 'Date', 'date-time': 'Date', default: 'string' },
     array: typeName => `Array<${typeName}>`,
   },
+  configureHandlebars: (handlebars) => {
+    const jsIdentifier = ident => new handlebars.SafeString(ident.replace(/[.]/g, '_'));
+    handlebars.registerHelper('jsIdentifier', jsIdentifier);
+    handlebars.registerHelper('concat', (delim, ...args) => args.slice(0, args.length - 1).join(delim));
+  },
 };
