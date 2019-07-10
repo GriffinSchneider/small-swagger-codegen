@@ -1,0 +1,69 @@
+{{~#maybeComment description}}
+{{{description}}}
+{{/maybeComment}}
+open class {{{name}}}: {{#if superclass}}{{{superclass}}}{{else}}SwaggerModel{{/if}} {
+    {{#each properties}}
+    {{~#maybeComment description}}
+    {{{description}}}
+    {{/maybeComment}}
+    public var {{{name}}}: {{{type}}}{{#unless isRequired}}?{{/unless}}
+{{/each}}
+
+    public init(
+    {{#each initializerProperties}}
+        {{{name}}}: {{{type}}} {{~#unless isRequired}}?=nil{{/unless}} {{~#unless @last}},{{/unless}}
+    {{/each}}
+    ) {
+    {{#each properties}}
+        self.{{{name}}} = {{{name}}}
+{{/each}}
+    {{~#if superclass}}
+        super.init(
+        {{#each inheritedProperties}}
+            {{{name}}}: {{{name}}} {{~#unless @last}},{{/unless}}
+{{/each}}
+        )
+    {{/if}}
+    }
+
+    {{#if superclass}}override {{/if}}public func serialize(format: String? = nil) throws -> Any? {
+        {{#if superclass}}var{{else}}let{{/if}} retVal: [String: Any?] = [
+        {{#each properties}}
+            "{{{specName}}}": try {{{name}}}{{#unless isRequired}}?{{/unless}}.serialize(format: {{#if format}}"{{format}}"{{else}}nil{{/if}}),
+        {{/each}}
+        ]
+        {{#if superclass}}
+        let serializedSuper = try (super.serialize(format: format) as? [String: Any?]) ?? [:]
+        retVal = retVal.merging(serializedSuper, uniquingKeysWith: { (mine, _) in mine })
+        {{/if}}
+        return retVal.filter { (_: String, val: Any?) -> Bool in return val != nil }
+    }
+
+    {{#if superclass}}override {{/if}}public class func deserialize(json: Any?, format: String? = nil, debugDescriptor: String = "{{{name}}}") throws -> Self {
+        guard let dictionary = json as? [String: Any] else {
+            throw deserializationError("Trying to deserialize a {{{name}}} but got \(String(describing: json))")
+        }
+        {{#if discriminator}}
+        if let discriminator = dictionary["{{{discriminator}}}"] as? String {
+            switch discriminator {
+            {{#each subclasses}}
+            case "{{{specName}}}":
+                return try cast(try {{{name}}}.deserialize(json: json, format: format, debugDescriptor: combineDebugDescriptors(debugDescriptor, "<{{{discriminator}}}>.{{{specName}}}")))
+            {{/each}}
+            default:
+                break
+            }
+        }
+        {{/if}}
+        let object = {{{name}}}(
+        {{#each initializerProperties}}
+            {{{name}}}: try {{#unless isRequired}}Optional<{{/unless}}{{{type}}}{{#unless isRequired}}>{{/unless}}.deserialize(json: dictionary["{{{specName}}}"], format: {{#if format}}"{{format}}"{{else}}nil{{/if}}, debugDescriptor: combineDebugDescriptors(debugDescriptor, ".{{{specName}}}")){{#unless @last}},{{/unless}}
+        {{/each}}
+        )
+        return try cast(object)
+    }
+    {{#each nestedModels}}
+
+    {{> modelClassTemplate}}
+    {{/each}}
+}

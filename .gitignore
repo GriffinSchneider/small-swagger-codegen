@@ -20,7 +20,6 @@ client
 *.orig
 
 work
-build
 pids
 logs
 results

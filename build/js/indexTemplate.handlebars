@@ -1,0 +1,59 @@
+// eslint-disable camelcase
+// eslint-disable-next-line no-unused-vars
+import { parameterBuilder, fetchHelper, eventSourceHelper } from 'rest-api-support';
+
+const CONFIG_FUNCTION = Symbol.for('small-swagger-codegen::configurationGenerator');
+
+/**
+ *
+ * @export
+ * @class {{{jsIdentifier apiClassName}}}
+ */
+export class {{{apiClassName}}} {
+  constructor(configOrGenerator) {
+    let config = (configOrGenerator && configOrGenerator[CONFIG_FUNCTION]) || configOrGenerator;
+    if (typeof config === 'function') {
+      config = config({{{apiClassName}}});
+    }
+    const {
+      baseUrl = '',
+      fetch,
+      EventSource,
+      requestInterceptor,
+      responseInterceptor,
+    } = config || {}
+    Object.assign(this, { baseUrl, fetch, requestInterceptor, responseInterceptor, EventSource });
+  }
+{{#each methods}}
+
+  /**
+   * {{#if description.length}}{{{description}}}{{else}}{{name}}{{/if}}
+   *
+  {{#each params}}
+   * @parameter { {{{type}}} } {{{name}}}: {{{description}}}
+  {{/each}}
+   */
+  {{{name}}}({{#if params.length}}{
+{{#each params}}
+    {{{name}}},
+{{/each}}
+  }{{else}}hasNoArguments{{/if}}, $$fetchOptions) {
+    // Build parameters, run request interceptors, fetch, and then run response interceptors
+    // eslint-disable-next-line prefer-rest-params
+    const $$source = { method: '{{{name}}}', client: '{{{apiClassName}}}', arguments: arguments[0] };
+    const $$fetchArgs = parameterBuilder('{{{capMethod}}}', this.baseUrl, '{{{path}}}')
+{{#each params}}      .{{{in}}}('{{{serverName}}}', {{{name}}}{{#if format}}, { {{#if format}}
+        format: '{{format}}',
+      {{/if}} }{{/if}}){{#if @last}}
+      .build();{{/if}}
+{{else}}      .build();
+{{/each}}{{#if streaming}}
+    return eventSourceHelper(this, $$fetchArgs, $$fetchOptions, $$source);
+{{else}}
+    return fetchHelper(this, $$fetchArgs, $$fetchOptions, $$source);
+{{/if}}
+  }
+{{/each}}
+}
+
+export default {{{apiClassName}}};
