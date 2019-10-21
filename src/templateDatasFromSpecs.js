@@ -380,7 +380,9 @@ function methodFromSpec(endPath, pathParams, basePath, method, methodSpec, refTa
   const path = urlJoin('/', basePath, endPath);
   const capMethod = _.upperCase(method);
   const streaming = _.get(methodSpec, 'produces[0]') === 'text/event-stream';
-  return { path, name, description, method, params, response, models, capMethod, streaming };
+  const security = methodSpec.security;
+
+  return { path, name, description, method, params, response, models, capMethod, streaming, security };
 }
 
 function methodsFromPath(path, pathSpec, basePath, refTarget, lang, opts) {
