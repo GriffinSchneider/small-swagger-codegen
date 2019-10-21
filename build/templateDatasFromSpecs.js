@@ -473,6 +473,7 @@ function methodFromSpec(endPath, pathParams, basePath, method, methodSpec, refTa
   const capMethod = _lodash.default.upperCase(method);
 
   const streaming = _lodash.default.get(methodSpec, 'produces[0]') === 'text/event-stream';
+  const security = methodSpec.security;
   return {
     path,
     name,
@@ -482,7 +483,8 @@ function methodFromSpec(endPath, pathParams, basePath, method, methodSpec, refTa
     response,
     models,
     capMethod,
-    streaming
+    streaming,
+    security
   };
 }
 
