@@ -325,7 +325,7 @@ function typeInfoAndModelsFromObjectSchema(schema, name, specName, unresolvedSup
   //   properties, then remove the non-inherited property and use the inherited one.
 
 
-  const nonInheritedProperties = _lodash.default.filter(properties, prop => !_lodash.default.find(inheritedProperties, iProp => isEqualIgnoring(prop, iProp, 'description', 'isRequired')));
+  const nonInheritedProperties = _lodash.default.filter(properties, prop => !_lodash.default.find(inheritedProperties, iProp => isEqualIgnoringDescription(prop, iProp)));
 
   const myModel = {
     name,
