@@ -265,7 +265,7 @@ function typeInfoAndModelsFromObjectSchema(schema, name, specName, unresolvedSup
   // If this model has any properties with the same name and type as one of its inherited
   //   properties, then remove the non-inherited property and use the inherited one.
   const nonInheritedProperties = _.filter(properties, prop => (
-    !_.find(inheritedProperties, iProp => isEqualIgnoring(prop, iProp, 'description', 'isRequired'))
+    !_.find(inheritedProperties, iProp => isEqualIgnoringDescription(prop, iProp))
   ));
 
   const myModel = {
